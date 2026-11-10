@@ -598,4 +598,4 @@ Dự án Online Bookstore hướng đến xây dựng một website bán sách t
 
 Thông qua dự án, nhóm có cơ hội vận dụng kiến thức về phát triển giao diện với React, xử lý Backend bằng Node.js và Express, đồng thời quản lý dữ liệu bằng MongoDB.
 
-Đây cũng là cơ hội để các thành viên rèn luyện kỹ năng lập trình, làm việc nhóm, quản lý mã nguồn và triển khai một sản phẩm phần mềm hoàn chỉnh hơn.
+Đây cũng là cơ hội để các thành viên rèn luyện kỹ năng lập trình, làm việc nhóm, quản lý mã nguồn và triển khai một sản phẩm phần mềm hoàn chỉnh hơn.# project_ltw
