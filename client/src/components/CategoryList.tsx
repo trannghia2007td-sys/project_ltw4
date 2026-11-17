@@ -1,12 +1,21 @@
 
-import { categories } from '../data/books'
+type Category = {
+  _id: string
+  name: string
+  slug: string
+}
 
 type CategoryListProps = {
+  categories: Category[]
   selected: string
   onSelect: (category: string) => void
 }
 
-function CategoryList({ selected, onSelect }: CategoryListProps) {
+function CategoryList({
+  categories,
+  selected,
+  onSelect,
+}: CategoryListProps) {
   return (
     <section className="category-section">
       <div className="section-heading">
@@ -17,13 +26,22 @@ function CategoryList({ selected, onSelect }: CategoryListProps) {
       </div>
 
       <div className="category-list">
+        <button
+          className={`category-button ${
+            selected === 'all' ? 'active' : ''
+          }`}
+          onClick={() => onSelect('all')}
+        >
+          Tất cả sách
+        </button>
+
         {categories.map((item) => (
           <button
-            key={item.id}
+            key={item._id}
             className={`category-button ${
-              selected === item.id ? 'active' : ''
+              selected === item.slug ? 'active' : ''
             }`}
-            onClick={() => onSelect(item.id)}
+            onClick={() => onSelect(item.slug)}
           >
             {item.name}
           </button>

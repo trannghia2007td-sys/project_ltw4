@@ -1,3 +1,4 @@
+
 import { useEffect, useMemo, useState } from 'react'
 
 import Header from '../components/Header'
@@ -13,12 +14,21 @@ type ApiBook = Omit<Book, 'id'> & {
   _id: string
 }
 
+type Category = {
+  _id: string
+  name: string
+  slug: string
+}
+
 function Home() {
   const { cartCount, addToCart } = useCart()
 
   const [books, setBooks] = useState<Book[]>([])
+  const [categories, setCategories] = useState<Category[]>([])
+
   const [selectedCategory, setSelectedCategory] = useState('all')
   const [keyword, setKeyword] = useState('')
+
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
@@ -54,6 +64,25 @@ function Home() {
     fetchBooks()
   }, [])
 
+  useEffect(() => {
+    async function fetchCategories() {
+      try {
+        const response = await fetch('http://localhost:5000/api/categories')
+        const data = await response.json()
+
+        if (!response.ok) {
+          throw new Error(data.message || 'Không thể tải danh mục')
+        }
+
+        setCategories(data.categories || [])
+      } catch (err) {
+        console.error('Lỗi tải danh mục:', err)
+      }
+    }
+
+    fetchCategories()
+  }, [])
+
   const filteredBooks = useMemo(() => {
     const normalizedKeyword = keyword.trim().toLowerCase()
 
@@ -82,6 +111,7 @@ function Home() {
 
       <main className="main-content">
         <CategoryList
+          categories={categories}
           selected={selectedCategory}
           onSelect={setSelectedCategory}
         />

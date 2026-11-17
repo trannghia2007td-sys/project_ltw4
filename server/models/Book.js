@@ -1,3 +1,4 @@
+
 const mongoose = require('mongoose')
 
 const bookSchema = new mongoose.Schema(
@@ -19,8 +20,8 @@ const bookSchema = new mongoose.Schema(
     },
     category: {
       type: String,
-      required: true,
-      enum: ['van-hoc', 'truyen-tranh', 'thieu-nhi', 'khoa-hoc', 'ky-nang'],
+      required: [true, 'Vui lòng chọn danh mục'],
+      trim: true,
     },
     image: {
       type: String,
@@ -33,9 +34,7 @@ const bookSchema = new mongoose.Schema(
       trim: true,
     },
   },
-  {
-    timestamps: true,
-  },
+  { timestamps: true },
 )
 
 module.exports = mongoose.model('Book', bookSchema)

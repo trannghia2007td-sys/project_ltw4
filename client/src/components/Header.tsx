@@ -41,6 +41,7 @@ function Header({
         </div>
 
         <div className="header-actions">
+          {/* Chuyển đổi giao diện sáng và tối */}
           <button
             type="button"
             className="theme-toggle"
@@ -61,14 +62,31 @@ function Header({
                 👋 Xin chào, <strong>{user.username}</strong>
               </span>
 
-              <Link to="/orders" className="login-button">
-                Đơn hàng
-              </Link>
-
-              {user.role === 'admin' && (
-                <Link to="/admin" className="login-button">
-                  Quản trị
+              {/* Chức năng dành cho khách hàng */}
+              {user.role === 'customer' && (
+                <Link to="/orders" className="login-button">
+                  Đơn hàng
                 </Link>
+              )}
+
+              {/* Chức năng dành riêng cho Admin */}
+              {user.role === 'admin' && (
+                <>
+                  <Link to="/admin" className="login-button">
+                    Quản lý sách
+                  </Link>
+
+                  <Link to="/admin/categories" className="login-button">
+                    Danh mục
+                  </Link>
+
+                  <Link to="/admin/orders" className="login-button">
+                    Quản lý đơn hàng
+                  </Link>
+                  <Link to ="/admin/users" className="login-button">
+                    Quản lý người dùng
+                  </Link>
+                </>
               )}
 
               <button

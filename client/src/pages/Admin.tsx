@@ -1,7 +1,16 @@
-import { useCallback, useEffect, useState, type FormEvent, type ChangeEvent } from 'react'
+
+import {
+  useCallback,
+  useEffect,
+  useState,
+  type FormEvent,
+  type ChangeEvent,
+} from 'react'
+
 import { useAuth } from '../context/AuthContext'
 
 const API_URL = 'http://localhost:5000/api/books'
+const CATEGORY_API_URL = 'http://localhost:5000/api/categories'
 
 const initialForm = {
   title: '',
@@ -22,11 +31,18 @@ type AdminBook = {
   label: string
 }
 
+type Category = {
+  _id: string
+  name: string
+  slug: string
+}
+
 function Admin() {
   const { user } = useAuth()
 
   const [form, setForm] = useState(initialForm)
   const [books, setBooks] = useState<AdminBook[]>([])
+  const [categories, setCategories] = useState<Category[]>([])
   const [message, setMessage] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -53,10 +69,50 @@ function Admin() {
     }
   }, [])
 
+  // Tải danh sách danh mục từ MongoDB
+  const loadCategories = useCallback(async () => {
+    try {
+      const response = await fetch(CATEGORY_API_URL)
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Không thể tải danh mục.')
+      }
+
+      const categoryList: Category[] = data.categories || []
+
+      setCategories(categoryList)
+
+      // Nếu danh mục mặc định không còn tồn tại thì chọn danh mục đầu tiên
+      setForm((current) => {
+        const categoryExists = categoryList.some(
+          (item) => item.slug === current.category,
+        )
+
+        if (categoryExists || categoryList.length === 0) {
+          return current
+        }
+
+        return {
+          ...current,
+          category: categoryList[0].slug,
+        }
+      })
+    } catch (error) {
+      setMessage(
+        error instanceof Error
+          ? error.message
+          : 'Lỗi khi tải danh mục.',
+      )
+    }
+  }, [])
+
   useEffect(() => {
     loadBooks()
-  }, [loadBooks])
+    loadCategories()
+  }, [loadBooks, loadCategories])
 
+  // Thay đổi thông tin form
   function handleChange(
     e: ChangeEvent<HTMLInputElement | HTMLSelectElement>,
   ) {
@@ -78,11 +134,12 @@ function Admin() {
       return
     }
 
-    const price = Number(form.price)
+    if (!form.category) {
+      setMessage('Vui lòng chọn danh mục sách.')
+      return
+    }
 
-    // Kiểm tra giá sách
-    console.log('Giá nhập:', form.price)
-    console.log('Giá sau Number:', price)
+    const price = Number(form.price)
 
     if (!Number.isFinite(price) || price <= 0) {
       setMessage('Giá sách phải là số lớn hơn 0.')
@@ -128,6 +185,7 @@ function Admin() {
       setEditingId(null)
 
       await loadBooks()
+      await loadCategories()
     } catch (error) {
       setMessage(
         error instanceof Error
@@ -196,7 +254,6 @@ function Admin() {
         throw new Error(data.message || 'Không thể xóa sách.')
       }
 
-      // Nếu đang sửa cuốn sách vừa bị xóa thì đặt lại form
       if (editingId === book._id) {
         setEditingId(null)
         setForm(initialForm)
@@ -213,6 +270,7 @@ function Admin() {
     }
   }
 
+  // Kiểm tra quyền Admin
   if (!user || user.role !== 'admin') {
     return (
       <div className="page-container">
@@ -226,8 +284,10 @@ function Admin() {
     <main className="admin-page">
       <div className="admin-heading">
         <span>BOOKHAVEN MANAGEMENT</span>
-        <h1>Trang quản trị</h1>
-        <p>Xin chào {user.username}, hãy quản lý kho sách của cửa hàng.</p>
+        <h1>Quản lý sách</h1>
+        <p>
+          Xin chào {user.username}, hãy quản lý kho sách của cửa hàng.
+        </p>
       </div>
 
       {/* FORM THÊM VÀ SỬA SÁCH */}
@@ -291,12 +351,18 @@ function Admin() {
                 name="category"
                 value={form.category}
                 onChange={handleChange}
+                required
+                disabled={categories.length === 0}
               >
-                <option value="van-hoc">Văn học</option>
-                <option value="truyen-tranh">Truyện tranh</option>
-                <option value="thieu-nhi">Thiếu nhi</option>
-                <option value="khoa-hoc">Khoa học</option>
-                <option value="ky-nang">Kỹ năng</option>
+                {categories.length === 0 ? (
+                  <option value="">Chưa có danh mục</option>
+                ) : (
+                  categories.map((item) => (
+                    <option key={item._id} value={item.slug}>
+                      {item.name}
+                    </option>
+                  ))
+                )}
               </select>
             </div>
           </div>
@@ -337,7 +403,7 @@ function Admin() {
             <button
               className="admin-submit"
               type="submit"
-              disabled={isLoading}
+              disabled={isLoading || categories.length === 0}
             >
               {isLoading
                 ? 'Đang lưu sách...'
@@ -364,13 +430,17 @@ function Admin() {
         <div className="admin-panel-heading">
           <div>
             <h2>Danh sách sách</h2>
-            <p>Hiện có {books.length} cuốn sách trong cửa hàng.</p>
+            <p>
+              Hiện có {books.length} cuốn sách trong cửa hàng.
+            </p>
           </div>
           <span className="admin-icon">📖</span>
         </div>
 
         {books.length === 0 ? (
-          <p className="admin-empty">Chưa có sách trong cửa hàng.</p>
+          <p className="admin-empty">
+            Chưa có sách trong cửa hàng.
+          </p>
         ) : (
           <div className="admin-table-wrapper">
             <table className="admin-table">
@@ -386,34 +456,43 @@ function Admin() {
               </thead>
 
               <tbody>
-                {books.map((book, index) => (
-                  <tr key={book._id}>
-                    <td>{index + 1}</td>
-                    <td>{book.title}</td>
-                    <td>{book.author}</td>
-                    <td>{book.price.toLocaleString('vi-VN')}đ</td>
-                    <td>{book.category}</td>
-                    <td>
-                      <div className="admin-book-actions">
-                        <button
-                          type="button"
-                          className="admin-edit"
-                          onClick={() => handleEdit(book)}
-                        >
-                          Sửa
-                        </button>
+                {books.map((book, index) => {
+                  const categoryName =
+                    categories.find(
+                      (item) => item.slug === book.category,
+                    )?.name || book.category
 
-                        <button
-                          type="button"
-                          className="admin-delete"
-                          onClick={() => handleDelete(book)}
-                        >
-                          Xóa
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                  return (
+                    <tr key={book._id}>
+                      <td>{index + 1}</td>
+                      <td>{book.title}</td>
+                      <td>{book.author}</td>
+                      <td>
+                        {book.price.toLocaleString('vi-VN')}đ
+                      </td>
+                      <td>{categoryName}</td>
+                      <td>
+                        <div className="admin-book-actions">
+                          <button
+                            type="button"
+                            className="admin-edit"
+                            onClick={() => handleEdit(book)}
+                          >
+                            Sửa
+                          </button>
+
+                          <button
+                            type="button"
+                            className="admin-delete"
+                            onClick={() => handleDelete(book)}
+                          >
+                            Xóa
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  )
+                })}
               </tbody>
             </table>
           </div>

@@ -1629,3 +1629,38 @@ textarea::placeholder {
     flex-direction: column;
   }
 }
+
+
+/* Bảng quản lý đơn hàng */
+.admin-order-table {
+  min-width: 1200px;
+}
+
+.admin-order-address {
+  min-width: 200px;
+  max-width: 280px;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  line-height: 1.5;
+}
+
+.admin-order-product {
+  margin-bottom: 5px;
+  line-height: 1.5;
+}
+
+.admin-order-table td select {
+  max-width: 150px;
+  padding: 8px;
+  border: 1px solid var(--border-color, #ddd);
+  border-radius: 6px;
+  background: var(--input-bg, #fff);
+  color: var(--text-primary, #222);
+}
+
+.admin-order-table td small {
+  display: block;
+  margin-top: 5px;
+  color: var(--text-secondary, #777);
+  font-size: 12px;
+}
